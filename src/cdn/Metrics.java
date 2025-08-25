@@ -97,7 +97,7 @@ public final class Metrics
 		{
 			count++;
 			sum += x;
-			if (x>max)
+			if (x > max)
 			{
 				max = x;
 			}
@@ -116,7 +116,7 @@ public final class Metrics
 			}
 			else
 			{
-				return (sum*1.0)/count;
+				return ((double)sum)/count;
 			}
 		}
 

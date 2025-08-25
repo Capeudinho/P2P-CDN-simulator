@@ -28,7 +28,7 @@ public class CDNNode implements EDProtocol
 		this.capacity = Configuration.getInt(prefix+"."+PAR_CAPACITY, 200);
 		this.chunkBytes = Configuration.getInt(prefix+"."+PAR_CHUNKSIZE, 128*1024);
 		this.originLatency = Configuration.getInt(prefix+"."+PAR_ORIGIN_LAT, 50);
-		this.cache = new LFUCache<>(capacity);
+		this.cache = new LRUCache<>(capacity);
 		this.neighbors = new int[0];
 	}
 
@@ -37,7 +37,7 @@ public class CDNNode implements EDProtocol
 		try
 		{
 			CDNNode copy = (CDNNode)super.clone();
-			copy.cache = new LFUCache<>(capacity);
+			copy.cache = new LRUCache<>(capacity);
 			copy.neighbors = new int[0];
 			return copy;
 		}
