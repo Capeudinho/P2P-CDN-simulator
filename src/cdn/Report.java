@@ -19,16 +19,17 @@ public class Report implements Control
     {
         try (FileWriter fw = new FileWriter(FILE_NAME, true)) {
             if (!headerWritten) {
-                fw.write("time,requests,hitrate,messages,lat_mean,lat_max\n");
+                fw.write("time,requests,hitrate,messages,lat_mean,lat_max,peers_traffic\n");
                 headerWritten = true;
             }
-            fw.write(String.format("%d,%d,%.4f,%d,%.2f,%d\n",
+            fw.write(String.format("%d,%d,%.4f,%d,%.2f,%d,%d\n",
                 CommonState.getTime(),
                 Metrics.requests(),
                 Metrics.hitRate(),
                 Metrics.messages(),
                 Metrics.latMean(),
-                Metrics.latMax()));
+                Metrics.latMax(),
+				Metrics.getTotalBytesTransferred()));
         } catch (IOException e) {
             System.err.println("Erro ao salvar métricas: " + e.getMessage());
         }
