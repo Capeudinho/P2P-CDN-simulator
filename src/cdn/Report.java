@@ -5,34 +5,42 @@ import peersim.core.CommonState;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class Report implements Control
-{
-    private static final String FILE_NAME = "metrics.txt";
-    private boolean headerWritten = false;
+public class Report implements Control {
+	private static final String FILE_NAME = "metrics.txt";
+	private boolean headerWritten = false;
 
-    public Report(String prefix)
-    {
-    }
+	public Report(String prefix) {
+	}
 
-    @Override
-    public boolean execute()
-    {
-        try (FileWriter fw = new FileWriter(FILE_NAME, true)) {
-            if (!headerWritten) {
-                fw.write("time,requests,hitrate,messages,lat_mean,lat_max,peers_traffic\n");
-                headerWritten = true;
-            }
-            fw.write(String.format("%d,%d,%.4f,%d,%.2f,%d,%d\n",
-                CommonState.getTime(),
-                Metrics.requests(),
-                Metrics.hitRate(),
-                Metrics.messages(),
-                Metrics.latMean(),
-                Metrics.latMax(),
-				Metrics.getTotalBytesTransferred()));
-        } catch (IOException e) {
-            System.err.println("Erro ao salvar métricas: " + e.getMessage());
-        }
-        return false;
-    }
+	private double meanChunkRedundancy() {
+		var map = Metrics.getChunkRedundancy();
+		if (map.isEmpty())
+			return 0.0;
+		int total = 0;
+		for (int v : map.values())
+			total += v;
+		return total / (double) map.size();
+	}
+
+	@Override
+	public boolean execute() {
+		try (FileWriter fw = new FileWriter(FILE_NAME, true)) {
+			if (!headerWritten) {
+				fw.write("time,requests,hitrate,messages,lat_mean,lat_max,peers_traffic,chunk_redundancy\n");
+				headerWritten = true;
+			}
+			fw.write(String.format("%d,%d,%.4f,%d,%.2f,%d,%d,%.2f\n",
+					CommonState.getTime(),
+					Metrics.requests(),
+					Metrics.hitRate(),
+					Metrics.messages(),
+					Metrics.latMean(),
+					Metrics.latMax(),
+					Metrics.getTotalBytesTransferred(),
+					meanChunkRedundancy()));
+		} catch (IOException e) {
+			System.err.println("Erro ao salvar métricas: " + e.getMessage());
+		}
+		return false;
+	}
 }

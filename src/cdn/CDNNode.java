@@ -81,6 +81,7 @@ public class CDNNode implements EDProtocol {
 			byte[] data = new byte[chunkBytes];
 			Arrays.fill(data, (byte) 1);
 			cache.put(k, data);
+			Metrics.chunkStored(k);
 			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, myId), base);
 		} else {
 			int toOrigin = 0;
@@ -92,6 +93,7 @@ public class CDNNode implements EDProtocol {
 		String k = key(rep.videoId, rep.chunkIndex);
 		if (!cache.contains(k)) {
 			cache.put(k, new byte[chunkBytes]);
+			Metrics.chunkStored(k);
 		}
 		Metrics.delivery();
 		Metrics.requestCompleted((int) me.getID(), rep.videoId, rep.chunkIndex);
