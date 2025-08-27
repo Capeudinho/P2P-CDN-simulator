@@ -65,26 +65,29 @@ public class CDNNode implements EDProtocol {
 
 	private void onChunkRequest(Node me, int pid, Messages.ChunkRequest req) {
 		String k = key(req.videoId, req.chunkIndex);
+		int myId = (int)me.getID();
+		if (myId == 0)
+		{
+			int service = originLatency+CommonState.r.nextInt((originLatency/4)+1);
+			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, myId), service);
+		}
 		boolean hit = cache.contains(k);
 		if (hit) {
 			cache.get(k);
 			Metrics.hit();
-			int service = 2 + CommonState.r.nextInt(3);
-			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, (int) me.getID()),
-					service);
+			int service = 2+CommonState.r.nextInt(3);
+			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, myId), service);
 			return;
 		}
 		Metrics.miss();
-		int myId = (int) me.getID();
-		if (myId == 0) {
-			int base = originLatency + CommonState.r.nextInt((originLatency / 4) + 1);
-			byte[] data = new byte[chunkBytes];
-			Arrays.fill(data, (byte) 1);
-			cache.put(k, data);
-			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, myId), base);
-		} else {
-			int toOrigin = 0;
-			sendLater(me, toOrigin, req, 1);
+		if (req.ttl > 0)
+		{
+			int target = chooseNeighbor(req.prevHopId);
+			sendLater(me, target, new Messages.ChunkRequest(req.videoId, req.chunkIndex, req.requesterId, myId, req.ttl-1), 1);
+		}
+		else
+		{
+			sendLater(me, 0, req, 1);
 		}
 	}
 
@@ -105,22 +108,25 @@ public class CDNNode implements EDProtocol {
 		int meId = (int) me.getID();
 		long vid = ev.videoId;
 		int idx = ev.nextIndex;
-		int target = chooseNeighbor(meId);
-		if (target < 0) {
-			target = 0;
-		}
+		int target = chooseNeighbor(0);
 		Metrics.requestIssued(meId, vid, idx);
-		sendLater(me, target, new Messages.ChunkRequest(vid, idx, meId, meId), 1);
-		int playbackGap = 5;
-		EDSimulator.add(playbackGap, new Messages.NextChunk(vid, idx + 1), me, CommonState.getPid());
+		sendLater(me, target, new Messages.ChunkRequest(vid, idx, meId, meId, 5), 1);
+		EDSimulator.add(5, new Messages.NextChunk(vid, idx+1), me, CommonState.getPid());
 	}
 
-	private int chooseNeighbor(int meId) {
-		if (neighbors == null || neighbors.length == 0) {
-			return -1;
+	private int chooseNeighbor(int prev)
+	{
+		if (neighbors == null || neighbors.length == 0)
+		{
+			return 0;
 		}
 		Random r = CommonState.r;
-		return neighbors[r.nextInt(neighbors.length)];
+		int target = prev;
+		while (target == prev)
+		{
+			target = r.nextInt(neighbors.length);
+		}
+		return neighbors[target];
 	}
 
 	private void sendLater(Node from, int toNodeId, Object ev, int delay) {
