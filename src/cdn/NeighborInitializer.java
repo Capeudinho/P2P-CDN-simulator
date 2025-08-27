@@ -37,12 +37,12 @@ public class NeighborInitializer implements Control
 			while (set.size() < Math.min(degree, n-2))
 			{
 				int cand = CommonState.r.nextInt(n);
-				if (cand!=i && cand!=0)
+				if (cand != i && cand != 0)
 				{
 					set.add(cand);
 				}
 			}
-			int[] arr = set.stream().mapToInt(x->x).toArray();
+			int[] arr = set.stream().mapToInt(x -> x).toArray();
 			proto.setNeighbors(arr);
 		}
 		System.out.println("Neighbors initialized.");
