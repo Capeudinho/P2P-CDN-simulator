@@ -81,8 +81,13 @@ public class CDNNode implements EDProtocol
 	private void onChunkRequest(Node me, int pid, Messages.ChunkRequest req)
 	{
 		String k = key(req.videoId, req.chunkIndex);
-		boolean hit = cache.contains(k);
 		int myId = (int)me.getID();
+		if (myId == 0)
+		{
+			int service = originLatency+CommonState.r.nextInt((originLatency/4)+1);
+			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, myId), service);
+		}
+		boolean hit = cache.contains(k);
 		if (hit)
 		{
 			cache.get(k);
@@ -92,15 +97,7 @@ public class CDNNode implements EDProtocol
 			return;
 		}
 		Metrics.miss();
-		if (myId == 0)
-		{
-			int service = originLatency+CommonState.r.nextInt((originLatency/4)+1);
-			byte[] data = new byte[chunkBytes];
-			Arrays.fill(data, (byte)1);
-			cache.put(k, data);
-			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, myId), service);
-		}
-		else if (req.ttl > 0)
+		if (req.ttl > 0)
 		{
 			int target = chooseNeighbor(req.prevHopId);
 			sendLater(me, target, new Messages.ChunkRequest(req.videoId, req.chunkIndex, req.requesterId, myId, req.ttl-1), 1);
