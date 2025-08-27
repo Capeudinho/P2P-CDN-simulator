@@ -3,141 +3,125 @@ package cdn;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
-public final class Metrics
-{
+public final class Metrics {
 	private static long hits = 0;
 	private static long misses = 0;
 	private static long deliveries = 0;
 	private static long msgs = 0;
 	private static long issued = 0;
+	private static long totalBytesTransferred = 0;
 	private static final Map<String, Long> startTimes = new ConcurrentHashMap<>();
 	private static final Map<String, Integer> waitingRequester = new ConcurrentHashMap<>();
-	private static long now(){ return peersim.core.CommonState.getTime(); }
 
-	public static synchronized void hit()
-	{
+	private static long now() {
+		return peersim.core.CommonState.getTime();
+	}
+
+	public static synchronized void hit() {
 		hits++;
 	}
 
-	public static synchronized void miss()
-	{
+	public static synchronized void miss() {
 		misses++;
 	}
 
-	public static synchronized void delivery()
-	{
+	public static synchronized void delivery() {
 		deliveries++;
 	}
 
-	public static synchronized void msg()
-	{
+	public static synchronized void msg() {
 		msgs++;
 	}
 
-	public static synchronized void requestIssued(int requester, long vid, int idx)
-	{
+	public static synchronized void requestIssued(int requester, long vid, int idx) {
 		issued++;
-		String k = vid+":"+idx;
+		String k = vid + ":" + idx;
 		startTimes.put(k, now());
 		waitingRequester.put(k, requester);
 	}
 
-	public static synchronized void requestCompleted(int requester, long vid, int idx)
-	{
-		String k = vid+":"+idx;
+	public static synchronized void requestCompleted(int requester, long vid, int idx) {
+		String k = vid + ":" + idx;
 		Long t0 = startTimes.remove(k);
 		waitingRequester.remove(k);
-		if (t0 != null)
-		{
-			long lat = now()-t0;
+		if (t0 != null) {
+			long lat = now() - t0;
 			LatStats.add(lat);
 		}
 	}
 
-	public static Integer getWaitingRequester(long vid, int idx)
-	{
-		return waitingRequester.get(vid+":"+idx);
+	public static Integer getWaitingRequester(long vid, int idx) {
+		return waitingRequester.get(vid + ":" + idx);
 	}
 
-	public static double hitRate()
-	{
-		long denom = hits+misses;
-		if (denom == 0)
-		{
+	public static double hitRate() {
+		long denom = hits + misses;
+		if (denom == 0) {
 			return 0.0;
-		}
-		else
-		{
-			return (hits*1.0)/denom;
+		} else {
+			return (hits * 1.0) / denom;
 		}
 	}
 
-	public static long requests()
-	{
+	public static long requests() {
 		return issued;
 	}
 
-	public static long deliveries()
-	{
+	public static long deliveries() {
 		return deliveries;
 	}
 
-	public static long messages()
-	{
+	public static long messages() {
 		return msgs;
 	}
 
-	private static final class LatStats
-	{
+	private static final class LatStats {
 		private static long count = 0;
 		private static long sum = 0;
 		private static long max = 0;
 
-		static synchronized void add(long x)
-		{
+		static synchronized void add(long x) {
 			count++;
 			sum += x;
-			if (x > max)
-			{
+			if (x > max) {
 				max = x;
 			}
 		}
 
-		static synchronized long count()
-		{
+		static synchronized long count() {
 			return count;
 		}
 
-		static synchronized double mean()
-		{
-			if (count == 0)
-			{
+		static synchronized double mean() {
+			if (count == 0) {
 				return 0.0;
-			}
-			else
-			{
-				return ((double)sum)/count;
+			} else {
+				return ((double) sum) / count;
 			}
 		}
 
-		static synchronized long max()
-		{
+		static synchronized long max() {
 			return max;
 		}
 	}
 
-	public static long latCount()
-	{
+	public static long latCount() {
 		return LatStats.count();
 	}
 
-	public static double latMean()
-	{
+	public static double latMean() {
 		return LatStats.mean();
 	}
 
-	public static long latMax()
-	{
+	public static long latMax() {
 		return LatStats.max();
+	}
+
+	public static void addBytesTransferred(long bytes) {
+		totalBytesTransferred += bytes;
+	}
+
+	public static long getTotalBytesTransferred() {
+		return totalBytesTransferred;
 	}
 }

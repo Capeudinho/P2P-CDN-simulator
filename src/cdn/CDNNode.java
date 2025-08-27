@@ -9,8 +9,7 @@ import peersim.config.Configuration;
 import java.util.Arrays;
 import java.util.Random;
 
-public class CDNNode implements EDProtocol
-{
+public class CDNNode implements EDProtocol {
 	private static final String PAR_TRANSPORT = "transport";
 	private static final String PAR_CAPACITY = "capacity";
 	private static final String PAR_CHUNKSIZE = "chunksize";
@@ -22,64 +21,49 @@ public class CDNNode implements EDProtocol
 	private CachePolicy<String, byte[]> cache;
 	private int[] neighbors;
 
-	public CDNNode(String prefix)
-	{
-		this.tid = Configuration.getPid(prefix+"."+PAR_TRANSPORT);
-		this.capacity = Configuration.getInt(prefix+"."+PAR_CAPACITY, 200);
-		this.chunkBytes = Configuration.getInt(prefix+"."+PAR_CHUNKSIZE, 128*1024);
-		this.originLatency = Configuration.getInt(prefix+"."+PAR_ORIGIN_LAT, 50);
+	public CDNNode(String prefix) {
+		this.tid = Configuration.getPid(prefix + "." + PAR_TRANSPORT);
+		this.capacity = Configuration.getInt(prefix + "." + PAR_CAPACITY, 200);
+		this.chunkBytes = Configuration.getInt(prefix + "." + PAR_CHUNKSIZE, 128 * 1024);
+		this.originLatency = Configuration.getInt(prefix + "." + PAR_ORIGIN_LAT, 50);
 		this.cache = new LRUCache<>(capacity);
 		this.neighbors = new int[0];
 	}
 
-	@Override public Object clone()
-	{
-		try
-		{
-			CDNNode copy = (CDNNode)super.clone();
+	@Override
+	public Object clone() {
+		try {
+			CDNNode copy = (CDNNode) super.clone();
 			copy.cache = new LRUCache<>(capacity);
 			copy.neighbors = new int[0];
 			return copy;
-		}
-		catch (CloneNotSupportedException e)
-		{
+		} catch (CloneNotSupportedException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public void setNeighbors(int[] nb)
-	{
+	public void setNeighbors(int[] nb) {
 		this.neighbors = nb;
 	}
 
 	@Override
-	public void processEvent(Node node, int pid, Object event)
-	{
-		if (event instanceof Messages.ChunkRequest m)
-		{
+	public void processEvent(Node node, int pid, Object event) {
+		if (event instanceof Messages.ChunkRequest m) {
 			onChunkRequest(node, pid, m);
-		}
-		else if (event instanceof Messages.ChunkReply m)
-		{
+		} else if (event instanceof Messages.ChunkReply m) {
 			onChunkReply(node, pid, m);
-		}
-		else if (event instanceof Messages.NextChunk m)
-		{
+		} else if (event instanceof Messages.NextChunk m) {
 			onNextChunk(node, pid, m);
-		}
-		else
-		{
-			System.err.println("Unknown event "+event);
+		} else {
+			System.err.println("Unknown event " + event);
 		}
 	}
 
-	private String key(long vid, int idx)
-	{
-		return vid+":"+idx;
+	private String key(long vid, int idx) {
+		return vid + ":" + idx;
 	}
 
-	private void onChunkRequest(Node me, int pid, Messages.ChunkRequest req)
-	{
+	private void onChunkRequest(Node me, int pid, Messages.ChunkRequest req) {
 		String k = key(req.videoId, req.chunkIndex);
 		int myId = (int)me.getID();
 		if (myId == 0)
@@ -88,8 +72,7 @@ public class CDNNode implements EDProtocol
 			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, myId), service);
 		}
 		boolean hit = cache.contains(k);
-		if (hit)
-		{
+		if (hit) {
 			cache.get(k);
 			Metrics.hit();
 			int service = 2+CommonState.r.nextInt(3);
@@ -108,25 +91,21 @@ public class CDNNode implements EDProtocol
 		}
 	}
 
-	private void onChunkReply(Node me, int pid, Messages.ChunkReply rep)
-	{
+	private void onChunkReply(Node me, int pid, Messages.ChunkReply rep) {
 		String k = key(rep.videoId, rep.chunkIndex);
-		if (!cache.contains(k))
-		{
+		if (!cache.contains(k)) {
 			cache.put(k, new byte[chunkBytes]);
 		}
 		Metrics.delivery();
-		Metrics.requestCompleted((int)me.getID(), rep.videoId, rep.chunkIndex);
+		Metrics.requestCompleted((int) me.getID(), rep.videoId, rep.chunkIndex);
 		Integer maybeRequester = Metrics.getWaitingRequester(rep.videoId, rep.chunkIndex);
-		if (maybeRequester != null && maybeRequester != (int)me.getID())
-		{
+		if (maybeRequester != null && maybeRequester != (int) me.getID()) {
 			sendLater(me, maybeRequester, rep, 1);
 		}
 	}
 
-	private void onNextChunk(Node me, int pid, Messages.NextChunk ev)
-	{
-		int meId = (int)me.getID();
+	private void onNextChunk(Node me, int pid, Messages.NextChunk ev) {
+		int meId = (int) me.getID();
 		long vid = ev.videoId;
 		int idx = ev.nextIndex;
 		int target = chooseNeighbor(0);
@@ -150,10 +129,13 @@ public class CDNNode implements EDProtocol
 		return neighbors[target];
 	}
 
-	private void sendLater(Node from, int toNodeId, Object ev, int delay)
-	{
+	private void sendLater(Node from, int toNodeId, Object ev, int delay) {
 		Node to = peersim.core.Network.get(toNodeId);
-		((Transport)from.getProtocol(tid)).send(from, to, ev, CommonState.getPid());
+		((Transport) from.getProtocol(tid)).send(from, to, ev, CommonState.getPid());
 		Metrics.msg();
+
+		if (ev instanceof Messages.ChunkReply && (int) from.getID() != 0) {
+			Metrics.addBytesTransferred(chunkBytes);
+		}
 	}
 }
