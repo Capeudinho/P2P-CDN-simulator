@@ -7,32 +7,35 @@ import java.io.IOException;
 
 public class Report implements Control
 {
-    private static final String FILE_NAME = "metrics.txt";
-    private boolean headerWritten = false;
+	private static final String FILE_NAME = "metrics.txt";
+	private boolean headerWritten = false;
 
-    public Report(String prefix)
-    {
-    }
+	public Report(String prefix)
+	{
+	}
 
-    @Override
-    public boolean execute()
-    {
-        try (FileWriter fw = new FileWriter(FILE_NAME, true)) {
-            if (!headerWritten) {
-                fw.write("time,requests,hitrate,messages,lat_mean,lat_max,peers_traffic\n");
-                headerWritten = true;
-            }
-            fw.write(String.format("%d,%d,%.4f,%d,%.2f,%d,%d\n",
-                CommonState.getTime(),
-                Metrics.requests(),
-                Metrics.hitRate(),
-                Metrics.messages(),
-                Metrics.latMean(),
-                Metrics.latMax(),
+	@Override
+	public boolean execute()
+	{
+		try (FileWriter fw = new FileWriter(FILE_NAME, true))
+		{
+			if (!headerWritten)
+			{
+				fw.write("time   requests   hitrate   messages   lat mean   lat max   peers traffic\n");
+				headerWritten = true;
+			}
+			fw.write(String.format("%d   %d   %.8f   %d   %.2f   %d   %d\n",
+				CommonState.getTime(),
+				Metrics.requests(),
+				Metrics.hitRate(),
+				Metrics.messages(),
+				Metrics.latMean(),
+				Metrics.latMax(),
 				Metrics.getTotalBytesTransferred()));
-        } catch (IOException e) {
-            System.err.println("Erro ao salvar métricas: " + e.getMessage());
-        }
-        return false;
-    }
+		} catch (IOException e)
+		{
+			System.err.println("Erro ao salvar métricas: " + e.getMessage());
+		}
+		return false;
+	}
 }

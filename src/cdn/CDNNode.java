@@ -22,10 +22,10 @@ public class CDNNode implements EDProtocol {
 
 	public CDNNode(String prefix)
 	{
-		this.tid = Configuration.getPid(prefix + "." + PAR_TRANSPORT);
-		this.capacity = Configuration.getInt(prefix + "." + PAR_CAPACITY, 200);
-		this.chunkBytes = Configuration.getInt(prefix + "." + PAR_CHUNKSIZE, 128 * 1024);
-		this.originLatency = Configuration.getInt(prefix + "." + PAR_ORIGIN_LAT, 50);
+		this.tid = Configuration.getPid(prefix+"."+PAR_TRANSPORT);
+		this.capacity = Configuration.getInt(prefix+"."+PAR_CAPACITY, 200);
+		this.chunkBytes = Configuration.getInt(prefix+"."+PAR_CHUNKSIZE, 128 * 1024);
+		this.originLatency = Configuration.getInt(prefix+"."+PAR_ORIGIN_LAT, 50);
 		this.cache = new LRUCache<>(capacity);
 		this.neighbors = new int[0];
 	}
@@ -68,13 +68,13 @@ public class CDNNode implements EDProtocol {
 		}
 		else
 		{
-			System.err.println("Unknown event " + event);
+			System.err.println("Unknown event "+event);
 		}
 	}
 
 	private String key(long vid, int idx)
 	{
-		return vid + ":" + idx;
+		return vid+":"+idx;
 	}
 
 	private void onChunkRequest(Node me, int pid, Messages.ChunkRequest req)
@@ -85,6 +85,7 @@ public class CDNNode implements EDProtocol {
 		{
 			int service = originLatency+CommonState.r.nextInt((originLatency/4)+1);
 			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, myId), service);
+			return;
 		}
 		boolean hit = cache.contains(k);
 		if (hit)
@@ -95,7 +96,10 @@ public class CDNNode implements EDProtocol {
 			sendLater(me, req.requesterId, new Messages.ChunkReply(req.videoId, req.chunkIndex, myId), service);
 			return;
 		}
-		Metrics.miss();
+		else
+		{
+			Metrics.miss();
+		}
 		if (req.ttl > 0)
 		{
 			int target = chooseNeighbor(req.prevHopId);
@@ -154,7 +158,7 @@ public class CDNNode implements EDProtocol {
 		Node to = peersim.core.Network.get(toNodeId);
 		((Transport) from.getProtocol(tid)).send(from, to, ev, CommonState.getPid());
 		Metrics.msg();
-		if (ev instanceof Messages.ChunkReply && (int) from.getID() != 0)
+		if (ev instanceof Messages.ChunkReply && (int)from.getID() != 0)
 		{
 			Metrics.addBytesTransferred(chunkBytes);
 		}
