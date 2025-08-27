@@ -8,13 +8,15 @@ public final class Messages
 		public final int chunkIndex;
 		public final int requesterId;
 		public final int prevHopId;
+		public final int ttl;
 
-		public ChunkRequest(long v, int idx, int req, int prev)
+		public ChunkRequest(long v, int idx, int req, int prev, int ttl)
 		{
 			this.videoId = v;
 			this.chunkIndex = idx;
 			this.requesterId = req;
 			this.prevHopId = prev;
+			this.ttl = ttl;
 		}
 
 		@Override public String toString()
