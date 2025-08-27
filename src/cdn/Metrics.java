@@ -12,7 +12,6 @@ public final class Metrics
 	private static long issued = 0;
 	private static long totalBytesTransferred = 0;
 	private static final Map<String, Long> startTimes = new ConcurrentHashMap<>();
-	private static final Map<String, Integer> waitingRequester = new ConcurrentHashMap<>();
 
 	private static long now()
 	{
@@ -44,24 +43,17 @@ public final class Metrics
 		issued++;
 		String k = vid+":"+idx;
 		startTimes.put(k, now());
-		waitingRequester.put(k, requester);
 	}
 
 	public static synchronized void requestCompleted(int requester, long vid, int idx)
 	{
 		String k = vid+":"+idx;
 		Long t0 = startTimes.remove(k);
-		waitingRequester.remove(k);
 		if (t0 != null)
 		{
 			long lat = now() - t0;
 			LatStats.add(lat);
 		}
-	}
-
-	public static Integer getWaitingRequester(long vid, int idx)
-	{
-		return waitingRequester.get(vid+":"+idx);
 	}
 
 	public static double hitRate()
