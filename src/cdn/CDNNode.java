@@ -117,6 +117,7 @@ public class CDNNode implements EDProtocol {
 		if (!cache.contains(k))
 		{
 			cache.put(k, new byte[chunkBytes]);
+			Metrics.chunkStored(k);
 		}
 		Metrics.delivery();
 		Metrics.requestCompleted((int)me.getID(), rep.videoId, rep.chunkIndex);
