@@ -12,7 +12,6 @@ public final class Metrics
 	private static long issued = 0;
 	private static long totalBytesTransferred = 0;
 	private static final Map<String, Long> startTimes = new ConcurrentHashMap<>();
-	private static final Map<String, Integer> waitingRequester = new ConcurrentHashMap<>();
 	private static final Map<String, Integer> chunkRedundancy = new ConcurrentHashMap<>();
 
 	private static long now()
