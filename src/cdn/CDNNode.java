@@ -120,12 +120,7 @@ public class CDNNode implements EDProtocol {
 			Metrics.chunkStored(k);
 		}
 		Metrics.delivery();
-		Metrics.requestCompleted((int) me.getID(), rep.videoId, rep.chunkIndex);
-		Integer maybeRequester = Metrics.getWaitingRequester(rep.videoId, rep.chunkIndex);
-		if (maybeRequester != null && maybeRequester != (int) me.getID())
-		{
-			sendLater(me, maybeRequester, rep, 1);
-		}
+		Metrics.requestCompleted((int)me.getID(), rep.videoId, rep.chunkIndex);
 	}
 
 	private void onNextChunk(Node me, int pid, Messages.NextChunk ev)
