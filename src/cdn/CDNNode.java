@@ -27,8 +27,8 @@ public class CDNNode implements EDProtocol
 	public CDNNode(String prefix)
 	{
 		this.tid = Configuration.getPid(prefix+"."+PAR_TRANSPORT);
-		this.capacity = Configuration.getInt(prefix+"."+PAR_CAPACITY, 200);
-		this.chunkBytes = Configuration.getInt(prefix+"."+PAR_CHUNKSIZE, 128 * 1024);
+		this.capacity = Configuration.getInt(prefix+"."+PAR_CAPACITY, 500);
+		this.chunkBytes = Configuration.getInt(prefix+"."+PAR_CHUNKSIZE, 65536);
 		this.originLatency = Configuration.getInt(prefix+"."+PAR_ORIGIN_LAT, 50);
 		this.lid = Configuration.getPid(prefix+"."+PAR_LINKABLE);
 		this.cache = new LRUCache<>(capacity);

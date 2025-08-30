@@ -21,9 +21,9 @@ public class StreamStarter implements Control
     public StreamStarter(String prefix)
 	{
         this.pid = Configuration.getPid(prefix+"."+PAR_PROTOCOL);
-        this.sessions = Configuration.getInt(prefix+"."+PAR_SESSIONS, 50);
-        this.catalog = Configuration.getInt(prefix+"."+PAR_CATALOG, 1000);
-        this.alpha = Configuration.getDouble(prefix+"."+PAR_ALPHA, 0.8);
+        this.sessions = Configuration.getInt(prefix+"."+PAR_SESSIONS, 100);
+        this.catalog = Configuration.getInt(prefix+"."+PAR_CATALOG, 2000);
+        this.alpha = Configuration.getDouble(prefix+"."+PAR_ALPHA, 0.9);
         Zipf.init(catalog, alpha);
     }
 
