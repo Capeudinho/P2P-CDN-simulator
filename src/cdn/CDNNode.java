@@ -8,8 +8,6 @@ import peersim.core.Linkable;
 import peersim.transport.Transport;
 import peersim.config.Configuration;
 
-import java.util.Random;
-
 public class CDNNode implements EDProtocol
 {
 	private static final String PAR_LINKABLE = "linkable";
@@ -140,12 +138,11 @@ public class CDNNode implements EDProtocol
 		{
 			return linkable.getNeighbor(0);
 		}
-		Random r = CommonState.r;
 		int i = 0;
 		int t = 0;
 		while (t < linkable.degree()*linkable.degree())
 		{
-			i = r.nextInt(linkable.degree());
+			i = CommonState.r.nextInt(linkable.degree());
 			Node neighbor = linkable.getNeighbor(i);
 			if (neighbor.isUp() && (int)neighbor.getID() != prev && (int)neighbor.getID() != 0)
 			{

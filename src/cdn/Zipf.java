@@ -1,5 +1,7 @@
 package cdn;
 
+import peersim.core.CommonState;
+
 public final class Zipf
 {
 	private static int N;
@@ -28,7 +30,7 @@ public final class Zipf
 
 	public static int sample()
 	{
-		double u = Math.random();
+		double u = CommonState.r.nextDouble();
 		int lo = 1;
 		int hi = N;
 		int ans = hi;
